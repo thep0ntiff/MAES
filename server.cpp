@@ -4,7 +4,8 @@
 #include <netinet/in.h>
 #include <unistd.h>
 #include <thread>
-#include "Cryptography/example.cpp"
+#include "Cryptography/example.h"
+
 
 #define PORT 8080
 
