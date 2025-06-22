@@ -390,6 +390,16 @@ void MixColumns(uint8_t state[][4]) {
 	state[3][3] ^= gf_mul[col[3]][0];
 }
 
+void generate_iv(uint8_t iv[16]) {
+    auto now = std::chrono::high_resolution_clock::now().time_since_epoch().count();
+    std::mt19937 generator(static_cast<uint32_t>(now));
+    std::uniform_int_distribution<uint8_t> dist(0, 255);
+
+    for (int i = 0; i < 16; ++i) {
+        iv[i] = dist(generator);
+    }
+}
+
 
 void Encrypt(uint8_t in[], uint8_t out[], uint32_t key[], int keysize) {
     uint8_t state[4][4];
@@ -505,8 +515,8 @@ void InvShiftRows(uint8_t state[][4])
 
 void InvMixColumns(uint8_t state[][4])
 {
-	int idx;
-	uint8_t col[4], t;
+	//int idx;
+	uint8_t col[4]; //, t;
 
 	col[0] = state[0][0];
 	col[1] = state[1][0];

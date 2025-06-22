@@ -1,3 +1,4 @@
+#include <cstdint>
 #include <iostream>
 #include <cstring>
 #include <sys/socket.h>
@@ -29,41 +30,51 @@ void handle_send(int socket) {
         encrypted_chunks.clear();
 
         encryptText(message, encrypted_chunks, key_schedule);
-
+        
+        std::vector<uint8_t> flat_buffer;
+        
         for (const auto& chunk : encrypted_chunks) {
-            send(socket, chunk.data(), chunk.size(), 0);    
+            flat_buffer.insert(flat_buffer.end(), chunk.begin(), chunk.end());
         }
+        send(socket, flat_buffer.data(), flat_buffer.size(), 0);    
+        
     }
 }
 
 void handle_recv(int socket) {
-    const int blocksize = 16;
-    char buffer[1024] = {0};
-    std::vector<std::vector<uint8_t> > encrypted_chunks;
+    const int buffer_size = 4096;
+    uint8_t buffer[buffer_size] = {0};
     std::string decrypted_message;
 
     while (true) {
-        int valread = read(socket, buffer, 1024);
+        int valread = read(socket, buffer, buffer_size);
         if (valread > 0) {
-            encrypted_chunks.clear();
- 
-             for (int i = 0; i < valread; i += blocksize) {
-                int chunk_size = std::min(blocksize, valread - i);
+            std::vector<std::vector<uint8_t>> encrypted_chunks;
 
-                std::vector<uint8_t> chunk(blocksize, 0);
-                std::memcpy(chunk.data(), buffer + i, chunk_size);
+            if (valread < 20) {
+                std::cerr << "[DECRYPT] Not enough data.\n";
+                continue;
+            }
 
-                encrypted_chunks.push_back(chunk);
-             }
-            
+            // 1. Extract IV (first 16 bytes)
+            encrypted_chunks.emplace_back(buffer, buffer + 16);
+
+            // 2. Extract length (next 4 bytes)
+            encrypted_chunks.emplace_back(buffer + 16, buffer + 20);
+
+            // 3. Remaining = ciphertext chunks
+            for (int i = 20; i < valread; i += 16) {
+                int chunk_size = std::min(16, valread - i);
+                encrypted_chunks.emplace_back(buffer + i, buffer + i + chunk_size);
+            }
+
             decryptText(encrypted_chunks, decrypted_message, key_schedule);
-            
+
             std::cout << "\r\033[K";
             std::cout << "Client: " << decrypted_message << std::endl;
             std::cout << "Server: " << std::flush;
 
             decrypted_message.clear();
-
         }
     }
 }

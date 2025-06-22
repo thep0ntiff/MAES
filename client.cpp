@@ -1,3 +1,4 @@
+#include <cstdint>
 #include <iostream>
 #include <cstring>
 #include <sys/socket.h>
@@ -27,50 +28,52 @@ void handle_send(int socket) {
         std::getline(std::cin, message);
 
         encrypted_chunks.clear();
-
         encryptText(message, encrypted_chunks, key_schedule);
 
-        for (const auto& chunk : encrypted_chunks) {
-            send(socket, chunk.data(), chunk.size(), 0);    
-        }
+        // Flatten and send all chunks in one write
+        std::vector<uint8_t> flat_buffer;
+        for (const auto& chunk : encrypted_chunks)
+            flat_buffer.insert(flat_buffer.end(), chunk.begin(), chunk.end());
+
+        send(socket, flat_buffer.data(), flat_buffer.size(), 0);
     }
 }
 
 void handle_recv(int socket) {
-    const int blocksize = 16; // AES block size
-    char buffer[1024] = {0}; // Buffer for incoming encrypted data
-    std::string decrypted_message; // String to hold the decrypted message
-    std::vector<std::vector<uint8_t> > encrypted_chunks; // Vector to hold the encrypted chunks
+    const int buffer_size = 4096;
+    uint8_t buffer[buffer_size] = {0};
+    std::string decrypted_message;
 
     while (true) {
-        int valread = read(socket, buffer, 1024);
+        int valread = read(socket, buffer, buffer_size);
         if (valread > 0) {
-            encrypted_chunks.clear(); // Clear previous chunks
+            std::vector<std::vector<uint8_t>> encrypted_chunks;
 
-            // Process the buffer in blocksize chunks
-            for (int i = 0; i < valread; i += blocksize) {
-                int chunk_size = std::min(blocksize, valread - i);
-
-                // Create a new chunk and copy data into it
-                std::vector<uint8_t> chunk(blocksize, 0);
-                std::memcpy(chunk.data(), buffer + i, chunk_size);
-
-                // Add the chunk to the list of encrypted chunks
-                encrypted_chunks.push_back(chunk);
+            if (valread < 20) { // IV (16) + length (4)
+                std::cerr << "[DECRYPT] Not enough data received.\n";
+                continue;
             }
 
-            // Decrypt the collected chunks
+            // 1. Extract IV
+            encrypted_chunks.emplace_back(buffer, buffer + 16);
+
+            // 2. Extract length
+            encrypted_chunks.emplace_back(buffer + 16, buffer + 20);
+
+            // 3. Extract ciphertext chunks
+            for (int i = 20; i < valread; i += 16) {
+                int chunk_size = std::min(16, valread - i);
+                encrypted_chunks.emplace_back(buffer + i, buffer + i + chunk_size);
+            }
+
+            // Decrypt
             decryptText(encrypted_chunks, decrypted_message, key_schedule);
 
             std::cout << "\r\033[K";
-            // Display the decrypted message
             std::cout << "Server: " << decrypted_message << std::endl;
-            std::cout << "CLient: " << std::flush;
+            std::cout << "Client: " << std::flush;
 
-            // Clear the decrypted message for the next iteration
             decrypted_message.clear();
-
-            usleep(100000);
         }
     }
 }

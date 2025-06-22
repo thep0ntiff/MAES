@@ -1,5 +1,7 @@
 #pragma once
 
+#include <chrono>
+#include <random>
 #include <stdint.h>
 #include <cstdint>
 
@@ -17,6 +19,8 @@ void AddRoundKey(uint8_t state[][4], uint32_t w[]);
 uint32_t SubWord(uint32_t word);
 
 void KeyExpansion(uint8_t key[], uint32_t w[], int keysize);
+
+void generate_iv(uint8_t iv[16]);
 
 void Encrypt(uint8_t in[], uint8_t out[], uint32_t key[], int key_size);
 void Decrypt(uint8_t in[], uint8_t out[], uint32_t key[], int key_size);
