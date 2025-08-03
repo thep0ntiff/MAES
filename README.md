@@ -10,7 +10,6 @@ MAES is a lightweight C++ implementation of the **Advanced Encryption Standard (
 - 💬 Example client-server chat application
 - 🧪 Chunk-based processing with debug output
 - 🧰 Pure C++ — no external dependencies
-- 🔍 Built-in debugging with hex dumps
 
 ---
 
