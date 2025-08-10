@@ -1,6 +1,6 @@
-#include "MAES/include/client.h"
-#include "include/crypt.h"
-
+#include "client.h"
+#include "crypt.h"
+#include <thread>
 
 #define PORT 8080
 
