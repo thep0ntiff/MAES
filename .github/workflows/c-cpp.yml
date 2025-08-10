@@ -27,16 +27,26 @@ jobs:
 
     - name: Install dependencies on Windows
       if: matrix.os == 'windows-latest'
-      shell: cmd
+      shell: pwsh
       run: |
         choco install make
         choco install mingw
 
-    - name: Build with make
-      run: make
+    - name: Prepare build directory and build on Linux/macOS
+      if: matrix.os != 'windows-latest'
+      run: |
+        mkdir -p bin
+        make
+
+    - name: Prepare build directory and build on Windows
+      if: matrix.os == 'windows-latest'
+      shell: cmd
+      run: |
+        if not exist bin mkdir bin
+        make
 
     - name: Run tests
-      run: make test || echo "No tests defined or test failed"
+      run: make test
 
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
