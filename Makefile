@@ -1,15 +1,47 @@
-CXX = g++
-CXXFLAGS = -std=c++17 -Wall -Wno-missing-braces
-SRC_DIR = Cryptography
+CXX       := g++
+INCLUDE_DIR := include
+CXXFLAGS  := -std=c++17 -Wall -Wno-missing-braces -I$(INCLUDE_DIR) -I$(INCLUDE_DIR)/cryptography
+SRC_DIR   := src/Cryptography
+BIN_DIR   := bin
 
+# Detect OS
+ifeq ($(OS),Windows_NT)
+    DETECTED_OS := Windows
+    PLATFORM_DIR := src/Windows
+    EXT := .exe
+    RM := del /Q
+    MKDIR := if not exist $(BIN_DIR) mkdir $(BIN_DIR)
+    LINK_LIBS := -lws2_32
+else
+    DETECTED_OS := $(shell uname -s)
+    PLATFORM_DIR := src/Unix
+    EXT :=
+    RM := rm -f
+    MKDIR := mkdir -p $(BIN_DIR)
+    LINK_LIBS := -lpthread
+endif
 
-all: server client
+COMMON_SRC := $(SRC_DIR)/AES.cpp \
+              $(SRC_DIR)/AES_CTR.cpp \
+              $(SRC_DIR)/crypt.cpp
 
-server: server.cpp $(SRC_DIR)/AES.cpp $(SRC_DIR)/example.cpp
-	$(CXX) $(CXXFLAGS) -o server server.cpp $(SRC_DIR)/AES.cpp $(SRC_DIR)/example.cpp $(SRC_DIR)/AES_CTR.cpp
+SERVER_SRC := $(PLATFORM_DIR)/server.cpp
+CLIENT_SRC := $(PLATFORM_DIR)/client.cpp
 
-client: client.cpp $(SRC_DIR)/AES.cpp $(SRC_DIR)/example.cpp
-	$(CXX) $(CXXFLAGS) -o client client.cpp $(SRC_DIR)/AES.cpp $(SRC_DIR)/example.cpp $(SRC_DIR)/AES_CTR.cpp
+SERVER_BIN := $(BIN_DIR)/server$(EXT)
+CLIENT_BIN := $(BIN_DIR)/client$(EXT)
+
+all: $(SERVER_BIN) $(CLIENT_BIN)
+
+$(SERVER_BIN): $(SERVER_SRC) $(COMMON_SRC)
+	$(MKDIR)
+	$(CXX) $(CXXFLAGS) -o $@ $(SERVER_SRC) $(COMMON_SRC) $(LINK_LIBS)
+
+$(CLIENT_BIN): $(CLIENT_SRC) $(COMMON_SRC)
+	$(MKDIR)
+	$(CXX) $(CXXFLAGS) -o $@ $(CLIENT_SRC) $(COMMON_SRC) $(LINK_LIBS)
 
 clean:
-	rm client server
+	$(RM) $(SERVER_BIN) $(CLIENT_BIN)
+
+.PHONY: all clean

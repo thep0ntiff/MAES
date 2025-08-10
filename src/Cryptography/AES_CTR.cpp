@@ -12,6 +12,10 @@ void AES_CTR_crypt(const uint8_t *input, uint8_t *output, size_t length, uint32_
     uint8_t keystream[16];
     std::memcpy(counter, iv, 16);
 
+    for (int i = 0; i < 16; i++) {
+        counter[i] = iv[i];
+    }
+
     for (size_t i = 0; i < length; i += 16) {
         // Encrypt the counter to produce the keystream
         Encrypt(counter, keystream, key_schedule, 256);

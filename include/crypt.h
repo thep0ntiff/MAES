@@ -1,9 +1,16 @@
-// Cryptography/example.h
+
 #pragma once
 
 #include <vector>
-#include <string>
+#include <cstring>
 #include "AES.h"
+
+#ifdef _WIN32
+    #include <winsock2.h>
+    #include <ws2tcpip.h>
+#else
+    #include <arpa/inet.h>
+#endif
 
 void encryptText(const std::string& input_text,
                  std::vector<std::vector<uint8_t>>& encrypted_chunks,

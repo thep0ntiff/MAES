@@ -1,11 +1,5 @@
-#include <cstdint>
-#include <iostream>
-#include <cstring>
-#include <sys/socket.h>
-#include <arpa/inet.h>
-#include <unistd.h>
-#include <thread>
-#include "Cryptography/example.h"
+#include "MAES/include/client.h"
+#include "include/crypt.h"
 
 
 #define PORT 8080
