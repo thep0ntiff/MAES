@@ -2,8 +2,9 @@
 #include "AES_CTR.h"
 #include <cstdint>
 #include <iostream>
-#include <string>
+#include <cstring>
 #include <vector>
+#include <arpa/inet.h>
 
 void encryptText(const std::string& input_text, 
                  std::vector<std::vector<uint8_t>>& encrypted_chunks,

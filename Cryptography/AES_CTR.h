@@ -1,4 +1,5 @@
 #include "AES.h"
+#include <cstring>
 
 void increment_counter(uint8_t counter[16]);
 
