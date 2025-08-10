@@ -9,8 +9,8 @@ ifeq ($(OS),Windows_NT)
     DETECTED_OS := Windows
     PLATFORM_DIR := src/Windows
     EXT := .exe
-    RM := del /Q
-    MKDIR := mkdir $(BIN_DIR)
+    RM := rm
+    MKDIR := mkdir -p $(BIN_DIR)
     LINK_LIBS := -lws2_32
 else
     DETECTED_OS := $(shell uname -s)
